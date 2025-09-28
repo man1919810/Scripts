@@ -1,4 +1,3 @@
---Kenny泛滥外部汉化脚本我的哔站UID:1531514159（删了这个死妈死爹死全家）
 local Translations = {
    ["mshax v4.5 | DOORS "] = "mshax v4.5 | DOORS(🇨🇳)",
     ["Main"] = "主要",
@@ -59,16 +58,18 @@ local Translations = {
     ["Toggle"] = "切换",
     ["Automation"] = "自动化",
     ["Anti Cheat Manipulation"] = "反作弊操控",
-    ["Auto Interact"] = "自动互动"
-    ["Ignore List"] = "忽略对象",
+    ["Auto Interact"] = "自动互动",
+        ["Ignore List"] = "忽略对象",
     ["Jeff Items"] = "Jeff商店物品",
     ["Gold"] = "金币",
     ["Drops"] = "滴剂",
+    [", Gold"] = "金币",
+    [", Drops"] = "滴剂",
     ["Auto Heartbeat Minigame"] = "自动心跳小游戏",
     ["Unlock Padlock Distance"] = "自动挂锁距离",
     ["Automation Library Code"] = "自动图书馆密码",
-    ["Auto Breaker Box"] = "自动断路器",
-    ["Auto Closet"] = "自动躲柜子"
+    ["Auto Breaker Box"] = "自动电箱游戏",
+    ["Auto Closet"] = "自动躲柜子",
 }
 
 local function translateText(text)
