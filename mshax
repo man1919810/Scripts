@@ -1,3 +1,7 @@
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+
 local Translations = {
    ["mshax v4.5 | DOORS "] = "mshax v4.5 | DOORS(🇨🇳)",
     ["Main"] = "主要",
@@ -57,19 +61,32 @@ local Translations = {
     ["Godmode Dropdown"] = "无敌模式",
     ["Toggle"] = "切换",
     ["Automation"] = "自动化",
+    ["God Mode"] = "启用无敌模式",
     ["Anti Cheat Manipulation"] = "反作弊操控",
     ["Auto Interact"] = "自动互动",
     ["Ignore List"] = "忽略对象",
-    ["Jeff Items"] = "Jeff商店物品",
-    ["Gold"] = "金币",
-    ["Drops"] = "滴剂",
-    [", Gold"] = "金币",
-    [", Drops"] = "滴剂",
     ["Auto Heartbeat Minigame"] = "自动心跳小游戏",
     ["Unlock Padlock Distance"] = "自动挂锁距离",
     ["Automation Library Code"] = "自动图书馆密码",
     ["Auto Breaker Box"] = "自动电箱游戏",
     ["Auto Closet"] = "自动躲柜子",
+    ["Visuals"] = "视觉",
+    ["Settings"] = "设置",   
+    ["Enable Show Distances"] = "启用显示距离",
+    ["Transparent"] = "透明",
+    ["Transparency Slider"] = "透明度",
+    ["Transparency Closet"] = "透明柜子",
+    ["Transparency Cart"] = "透明矿车",
+    ["Esp"] = "透视",
+    ["Door"] = "门",
+    ["Key"] = "钥匙",
+    ["Closet ESP"] = "柜子",
+    ["Gate Lever"] = "铁门拉杆",
+    ["Players ESP"] = "玩家",
+    ["Books"] = "书",
+    ["Breaker"] = "电箱",
+    ["Items ESP"] = "道具",
+    ["Gold ESP"] = "金币",
 }
 
 local function translateText(text)
