@@ -1,0 +1,178 @@
+local Translations = {
+    ["Doom by Fate | Yanciel"] = "Doom by Fate | Yanciel(由doors魔怔人汉化)",
+    ["ESP"] = "透视",
+    ["Killer ESP"] = "杀手透视",
+    ["Enable Killer Highlight"] = "启用杀手高亮显示",
+    ["Enable Killer Name"] = "启用杀手名称",
+    ["Enable Killer Health"] = "启用杀手生命值",
+    ["Killer ESP Color"] = "杀手透视颜色",
+    ["Survivor ESP"] = "幸存者透视",
+    ["Enable Survivor Highlight"] = "启用幸存者高亮显示",
+    ["Enable Survivor Name"] = "启用幸存者名称",
+    ["Enable Survivor Health"] = "启用幸存者生命值",
+    ["Survivor ESP Color"] = "幸存者透视颜色",
+    ["Mods"] = "修改",
+    ["Generator Mods"] = "发电机小游戏",
+    ["Auto Do Generator"] = "自动发电机",
+    ["Skill Check Delay (0 = MAX SPEED)"] = "技能检查延迟(如果数值是0,则代表最大速度)",
+    ["Stamina Mod"] = "耐力修改",
+    ["No Stamina Drain"] = "无体力消耗",
+    ["Survivors Aimbot"] = "幸存者自瞄",
+    ["Soldier Aimbot"] = "Soldier自瞄",
+    ["Soldier Method (On Anim)"] = "Soldier自瞄方法(在动画上)",
+    ["Off"] = "关",
+    ["Aimbot Speed (%)"] = "自瞄速度(%)",
+    ["Aimbot Prediction (Factor)"] = "预瞄(因素)",
+    ["Brawler Aimbot"] = "Brawler自瞄",
+    ["Brawler Method (On Anim)"] = "Brawler自瞄方法(在动画上)",
+    ["JaneDoe Aimbot"] = "JaneDoe自瞄",
+    ["JaneDoe Method (On Anim)"] = "JaneDoe自瞄方法(在动画上)",
+    ["Jester Aimbot"] = "Jester自瞄",
+    ["Jester Method (On Anim)"] = "Jester自瞄方法(在动画上)",
+    ["Killers Aimbot"] = "杀手自瞄",
+    ["Coolkid Aimbot"] = "酷小孩自瞄",
+    ["Coolkid Aimbot Method"] = "酷小孩自瞄方法",
+    ["Captain Rampage Aimbot"] = "Captain Rampage自瞄",
+    ["Captain Rampage Aimbot Method"] = "Captain Rampage自瞄方法",
+    ["Jeff the Killer Aimbot"] = "Jeff杀手自瞄",
+    ["Jeff the Killer Aimbot Method"] = "Jeff杀手自瞄方法",
+    ["John Doe Aimbot"] = "John Doe自瞄",
+    ["John Doe Aimbot Method"] = "John Doe自瞄方法",
+    ["Combat"] = "战斗",
+    ["Soldier Auto-Block"] = "Soldier自动格挡",
+    ["Enable Auto-Block"] = "启用自动格挡",
+    ["Block Timing Adjustment (ms)"] = "时序调整(ms)",
+    ["Enable Facing Check (Killer must see you)"] = "启用面向检查(必须在杀手看到你的情况下)",
+    ["Enable Range Visualizer"] = "启用范围可视化",
+    ["Block Range (Red Circle)"] = "块范围(红圈)",
+    ["Facing Visual Distance (Yellow Cone)"] = "面向视距(黄色圆柱体)",
+    ["Cone Position Offset (Forward/Back)"] = "圆柱体位置偏移(向前/向后)",
+    ["Facing Check Angle (Yellow Cone)"] = "面向检查角度(黄色圆柱体)",
+    ["Generator ESP"] = "发电机透视",
+    ["Enable Generator ESP"] = "启用发电机透视",
+    ["Generator Color"] = "发电机颜色",
+    ["Search this page"] = "搜索此页面",
+    ["General"] = "一般",
+    ["Rayfield Keybind"] = "Rayfield快捷键",
+    ["System"] = "系统",
+    ["Anonymised Analytics"] = "匿名分析",
+    ["Object ESP"] = "对象透视",
+    ["Show Yanciel"] = "打开菜单",
+    ["HRP Aim"] = "HRP瞄准",
+    ["Camera Aim"] = "相机瞄准",
+}
+
+local function translateText(text)
+    if not text or type(text) ~= "string" then return text end
+    
+    if Translations[text] then
+        return Translations[text]
+    end
+    
+    for en, cn in pairs(Translations) do
+        if text:find(en) then
+            return text:gsub(en, cn)
+        end
+    end
+    
+    return text
+end
+
+local function setupTranslationEngine()
+    local success, err = pcall(function()
+        local oldIndex = getrawmetatable(game).__newindex
+        setreadonly(getrawmetatable(game), false)
+        
+        getrawmetatable(game).__newindex = newcclosure(function(t, k, v)
+            if (t:IsA("TextLabel") or t:IsA("TextButton") or t:IsA("TextBox")) and k == "Text" then
+                v = translateText(tostring(v))
+            end
+            return oldIndex(t, k, v)
+        end)
+        
+        setreadonly(getrawmetatable(game), true)
+    end)
+    
+    if not success then
+        warn("元表劫持失败:", err)
+       
+        local translated = {}
+        local function scanAndTranslate()
+            for _, gui in ipairs(game:GetService("CoreGui"):GetDescendants()) do
+                if (gui:IsA("TextLabel") or gui:IsA("TextButton") or gui:IsA("TextBox")) and not translated[gui] then
+                    pcall(function()
+                        local text = gui.Text
+                        if text and text ~= "" then
+                            local translatedText = translateText(text)
+                            if translatedText ~= text then
+                                gui.Text = translatedText
+                                translated[gui] = true
+                            end
+                        end
+                    end)
+                end
+            end
+            
+            local player = game:GetService("Players").LocalPlayer
+            if player and player:FindFirstChild("PlayerGui") then
+                for _, gui in ipairs(player.PlayerGui:GetDescendants()) do
+                    if (gui:IsA("TextLabel") or gui:IsA("TextButton") or gui:IsA("TextBox")) and not translated[gui] then
+                        pcall(function()
+                            local text = gui.Text
+                            if text and text ~= "" then
+                                local translatedText = translateText(text)
+                                if translatedText ~= text then
+                                    gui.Text = translatedText
+                                    translated[gui] = true
+                                end
+                            end
+                        end)
+                    end
+                end
+            end
+        end
+        
+        local function setupDescendantListener(parent)
+            parent.DescendantAdded:Connect(function(descendant)
+                if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+                    task.wait(0.1)
+                    pcall(function()
+                        local text = descendant.Text
+                        if text and text ~= "" then
+                            local translatedText = translateText(text)
+                            if translatedText ~= text then
+                                descendant.Text = translatedText
+                            end
+                        end
+                    end)
+                end
+            end)
+        end
+        
+        pcall(setupDescendantListener, game:GetService("CoreGui"))
+        local player = game:GetService("Players").LocalPlayer
+        if player and player:FindFirstChild("PlayerGui") then
+            pcall(setupDescendantListener, player.PlayerGui)
+        end
+        
+        while true do
+            scanAndTranslate()
+            task.wait(3)
+        end
+    end
+end
+
+task.wait(2)
+
+setupTranslationEngine()
+
+local success, err = pcall(function()
+--这下面填加载外部脚本
+loadstring(game:HttpGet("https://raw.githubusercontent.com/yancielsicard2-arch/Doom-By-Fate-Yanciel/refs/heads/main/Doom%20By%20Fate%20Script",true))()
+
+
+end)
+
+if not success then
+    warn("加载失败:", err)
+end
