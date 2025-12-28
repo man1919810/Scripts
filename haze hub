@@ -1,0 +1,221 @@
+local Translations = {
+    ["Haze Hub"] = "何处中心(由doors魔怔人汉化)",
+    ["Main"] = "主页",
+    ["Farm"] = "农场",
+    ["Combat"] = "战斗",
+    ["Forge"] = "锻造",
+    ["Shop"] = "商店",
+    ["Potions"] = "药水",
+    ["Teleport"] = "传送",
+    ["Settings"] = "设置",
+    ["Don't forget to add our script to the autoexec folder of your executor!"] = "请务必将我们的脚本添加到注入器的autoexec文件夹中!",
+    ["Auto Enter World"] = "自动进入世界",
+    ["Disabled"] = "禁用",
+    ["Anti Staff"] = "防封禁",
+    ["Optimization Screen"] = "优化屏幕",
+    ["Claim All Codes"] = "领取所有兑换码",
+    ["Server Hop (Low)"] = "服务器切换（低延迟)",
+    ["Infinite Fly"] = "无限飞行",
+    ["Click TP (Ctrl + Click)"] = "Click TP (按Ctrl + 点击)",
+    ["Walk Speed"] = "走路速度",
+    ["Farming"] = "农业",
+    ["Auto Mine"] = "自动采矿",
+    ["Mine Targets"] = "采矿目标",
+    ["Pebble"] = "小石子",
+    ["Kill Aura"] = "杀戮光环",
+    ["Flight Speed"] = "飞行速度",
+    ["Mine Distance"] = "采矿距离",
+    ["Mine Direction"] = "采矿方向",
+    ["Under"] = "下面",
+    ["Ore ESP"] = "矿石透视",
+    ["Only Mine Selected"] = "仅选择矿物",
+    ["Filters rocks to only mine those containing selected ores. Only applies to rocks you specify below."] = "筛选岩石，仅挖掘含有选定矿物的那种。仅适用于您指定的下方岩石。",
+    ["Enable Ore Filter"] = "启用矿物筛选器",
+    ["Only Mine Ores"] = "仅挖掘矿物",
+    ["None selected"] = "未选择",
+    ["Apply Filter To"] = "启用筛选条件至",
+    ["Auto Attack"] = "自动攻击",
+    ["Attack Mode"] = "攻击模式",
+    ["Highest HP"] = "最大生命值",
+    ["Attack Targets"] = "攻击目标",
+    ["Attack Distance"] = "攻击距离",
+    ["Attack Direction"] = "攻击方向",
+    ["Auto Block"] = "自动防御",
+    ["Instant Forge"] = "瞬间锻造",
+    ["WARNING: If you use Instant Forge, you MUST quit and reopen the game before using the forge manually!"] = "警告：如果您使用瞬间锻造，则必须先退出并重新打开游戏，然后才能手动使用锻造!",
+    ["Select ore quantities and forge instantly."] = "选择矿石数量并立即锻造。",
+    ["Type: Weapon"] = "类型：武器",
+    ["Type: Armor"] = "类型：盔甲",
+    ["Auto Sell"] = "自动售卖",
+    ["Automatically sells selected items when they appear in your inventory."] = "当选定项目出现在您的库存中时，自动出售。",
+    ["Sell Items"] = "出售物品",
+    ["Runes to Keep"] = "保留符文",
+    ["Auto Potions"] = "自动药水",
+    ["Automatically buys and consumes potions."] = "自动购买并使用药水。",
+    ["Buy Count"] = "购买数量",
+    ["Consume All At Once"] = "一次性使用全部",
+    ["Webhook Settings"] = "Webhook设置",
+    ["Get notified when rare ores are found or when your character is stuck."] = "当稀有矿石被发现或您的角色卡住时，收到通知。",
+    ["Enable Webhooks"] = "启用Webhooks",
+    ["Alert Settings"] = "提醒设置",
+    ["Alert on Mythic Ore"] = "提醒稀有矿石",
+    ["Alert on Legendary Ore"] = "提醒传奇矿石",
+    ["Stuck Alert (10 min)"] = "角色被卡住提醒（10 分钟）",
+    ["Ping @everyone"] = "@everyone提醒",
+    ["Locations"] = "位置",
+    ["Arcane Pickaxe"] = "神秘的矿镐",
+    ["AttackDamagePotionl"] = "攻击力药水",
+    ["Bard"] = "诗人",
+    ["BardGuitar"] = "诗人吉他",
+    ["Bronze Pickaxe"] = "青铜矿镐",
+    ["Cat"] = "猫",
+    ["Enhancer"] = "增强器",
+    ["FallenAngelCaveDoor"] = "堕落天使洞穴门",
+    ["Gold Pickaxe"] = "金镐",
+    ["Greedy Cey"] = "贪婪的塞伊",
+    ["HealthPotionl"] = "治疗药水",
+    ["Injured Miner"] = "受伤的矿工",
+    ["Iron Pickaxe"] = "铁镐",
+    ["LuckPotionl"] = "幸运药水",
+    ["Marbles"] = "弹珠",
+    ["Maria"] = "玛丽亚",
+    ["Miner Fred"] = "矿工弗雷德",
+    ["MinerPotionl"] = "矿工药水",
+    ["MovementSpeedPotionl"] = "移动速度药剂",
+    ["Nord"] = "北方",
+    ["Platinum Pickaxe"] = "白金铁镐",
+    ["Runemaker"] = "符文制造者",
+    ["Sensei Moro"] = "森先生",
+    ["SimpleLantern"] = "简单的灯笼",
+    ["Stonewake's Pickaxe"] = "石眠的铁镐",
+    ["Suspicous Fisher"] = "可疑渔夫",
+    ["Tomo"] = "友",
+    ["UmutTheBrave"] = "勇敢者乌穆特",
+    ["Undead"] = "不死生物",
+    ["Wizard"] = "巫师",
+    ["Information"] = "信息",
+    ["Press [INSERT] to minimize/maximize the UI."] = "按下 [INSERT] 键以最小化/最大化 UI。",
+    ["Auto Reconnect"] = "自动重新连接",
+    ["Account Connection"] = "账户链接",
+    ["Connect your Haze account to track stats."] = "将您的 Haze 账户连接起来以跟踪统计数据。",
+    ["Head over to haze.wtf to get your connection token."] = "请访问 haze.wtf 获取您的连接令牌。",
+    ["Connection Token"] = "连接令牌",
+    ["Enter Token.."] = "输入令牌…",
+    ["Connect Account"] = "连接账户",
+    ["Join Discord"] = "加入Discord"
+}
+
+local function translateText(text)
+    if not text or type(text) ~= "string" then return text end
+    
+    if Translations[text] then
+        return Translations[text]
+    end
+    
+    for en, cn in pairs(Translations) do
+        if text:find(en) then
+            return text:gsub(en, cn)
+        end
+    end
+    
+    return text
+end
+
+local function setupTranslationEngine()
+    local success, err = pcall(function()
+        local oldIndex = getrawmetatable(game).__newindex
+        setreadonly(getrawmetatable(game), false)
+        
+        getrawmetatable(game).__newindex = newcclosure(function(t, k, v)
+            if (t:IsA("TextLabel") or t:IsA("TextButton") or t:IsA("TextBox")) and k == "Text" then
+                v = translateText(tostring(v))
+            end
+            return oldIndex(t, k, v)
+        end)
+        
+        setreadonly(getrawmetatable(game), true)
+    end)
+    
+    if not success then
+        warn("元表劫持失败:", err)
+       
+        local translated = {}
+        local function scanAndTranslate()
+            for _, gui in ipairs(game:GetService("CoreGui"):GetDescendants()) do
+                if (gui:IsA("TextLabel") or gui:IsA("TextButton") or gui:IsA("TextBox")) and not translated[gui] then
+                    pcall(function()
+                        local text = gui.Text
+                        if text and text ~= "" then
+                            local translatedText = translateText(text)
+                            if translatedText ~= text then
+                                gui.Text = translatedText
+                                translated[gui] = true
+                            end
+                        end
+                    end)
+                end
+            end
+            
+            local player = game:GetService("Players").LocalPlayer
+            if player and player:FindFirstChild("PlayerGui") then
+                for _, gui in ipairs(player.PlayerGui:GetDescendants()) do
+                    if (gui:IsA("TextLabel") or gui:IsA("TextButton") or gui:IsA("TextBox")) and not translated[gui] then
+                        pcall(function()
+                            local text = gui.Text
+                            if text and text ~= "" then
+                                local translatedText = translateText(text)
+                                if translatedText ~= text then
+                                    gui.Text = translatedText
+                                    translated[gui] = true
+                                end
+                            end
+                        end)
+                    end
+                end
+            end
+        end
+        
+        local function setupDescendantListener(parent)
+            parent.DescendantAdded:Connect(function(descendant)
+                if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+                    task.wait(0.1)
+                    pcall(function()
+                        local text = descendant.Text
+                        if text and text ~= "" then
+                            local translatedText = translateText(text)
+                            if translatedText ~= text then
+                                descendant.Text = translatedText
+                            end
+                        end
+                    end)
+                end
+            end)
+        end
+        
+        pcall(setupDescendantListener, game:GetService("CoreGui"))
+        local player = game:GetService("Players").LocalPlayer
+        if player and player:FindFirstChild("PlayerGui") then
+            pcall(setupDescendantListener, player.PlayerGui)
+        end
+        
+        while true do
+            scanAndTranslate()
+            task.wait(3)
+        end
+    end
+end
+
+task.wait(2)
+
+setupTranslationEngine()
+
+local success, err = pcall(function()
+--这下面填加载外部脚本
+loadstring(game:HttpGet("https://haze.wtf/api/script"))()
+
+
+end)
+
+if not success then
+    warn("加载失败:", err)
+end
