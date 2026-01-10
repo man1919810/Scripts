@@ -1,0 +1,357 @@
+    local CONFIG = {
+    TRANSLATE_DELAY = 0.2, -- 进一步减少延迟
+    NOTIFICATION_DURATION = 3,
+    GUI_SCAN_DELAY = 0.02, -- 大幅减少GUI扫描延迟
+    BATCH_PROCESS_SIZE = 50 -- 批量处理大小，避免卡顿
+}
+
+-- 缓存常用服务
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+
+-- 本地玩家引用
+local LocalPlayer = Players.LocalPlayer
+
+-- 翻译字典 (保持原有翻译字典)
+local Translations = {
+    ["Sharkbite 2"] = "鲨鱼咬2(由doors魔怔人汉化)",
+    ["Main"] = "主要",
+    ["Autofarm"] = "自动农场",
+    ["Auto Instakill shark [Shoot shark once to enable]"] = "自动瞬杀鲨鱼 [瞄准鲨鱼一次即可启用]",
+    ["Auto win as shark"] = "鲨鱼自动获胜",
+    ["Shark ESP"] = "鲨鱼透视",
+    ["Highlight sharks [ESP]"] = "高亮显示鲨鱼[透视]",
+    ["Auto Vase"] = "自动瓶子",
+    ["Auto touch vases"] = "自动触摸瓶子",
+    ["General"] = "一般",
+    ["Rayfield Keybind"] = "Rayfield快捷键",
+    ["System"] = "系统",
+    ["Anonymised Analytics"] = "匿名分析",
+    ["Show Rayfield"] = "打开菜单"
+}
+
+-- 缓存已翻译的对象
+local TranslatedObjects = setmetatable({}, {__mode = "k"})
+
+-- 优化的通知系统
+local function showNotification(message)
+    local success, result = pcall(function()
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "TranslationNotification"
+        ScreenGui.Parent = CoreGui
+        ScreenGui.ResetOnSpawn = false
+
+        local Frame = Instance.new("Frame")
+        Frame.Size = UDim2.new(0, 300, 0, 100)
+        Frame.Position = UDim2.new(0.5, -150, 0.5, -50)
+        Frame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+        Frame.BorderColor3 = Color3.new(0.3, 0.3, 0.3)
+        Frame.BorderSizePixel = 2
+        Frame.Active = true
+        Frame.Draggable = true
+        Frame.Parent = ScreenGui
+
+        local TextLabel = Instance.new("TextLabel")
+        TextLabel.Size = UDim2.new(1, 0, 0.8, 0)
+        TextLabel.Position = UDim2.new(0, 0, 0, 0)
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Text = message
+        TextLabel.TextColor3 = Color3.new(1, 1, 1)
+        TextLabel.TextScaled = true
+        TextLabel.Parent = Frame
+
+        local CloseButton = Instance.new("TextButton")
+        CloseButton.Size = UDim2.new(1, 0, 0.2, 0)
+        CloseButton.Position = UDim2.new(0, 0, 0.8, 0)
+        CloseButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+        CloseButton.Text = "关闭"
+        CloseButton.TextColor3 = Color3.new(1, 1, 1)
+        CloseButton.Parent = Frame
+        
+        CloseButton.MouseButton1Click:Connect(function()
+            ScreenGui:Destroy()
+        end)
+
+        task.delay(CONFIG.NOTIFICATION_DURATION, function()
+            if ScreenGui and ScreenGui.Parent then
+                ScreenGui:Destroy()
+            end
+        end)
+        
+        return ScreenGui
+    end)
+    
+    if not success then
+        warn("通知创建失败:", result)
+    end
+end
+
+-- 优化的文本翻译函数
+local function translateText(text)
+    if not text or type(text) ~= "string" or text == "" then 
+        return text 
+    end
+    
+    -- 预处理文本
+    local processedText = text:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+    
+    -- 精确匹配优先
+    for en, cn in pairs(Translations) do
+        local enLower = en:lower()
+        if processedText == enLower or processedText == enLower .. ":" then
+            return cn
+        end
+    end
+    
+    -- 部分匹配
+    for en, cn in pairs(Translations) do
+        if text:lower():find(en:lower(), 1, true) then
+            local escapedPattern = en:gsub("([%(%)%.%+%-%*%?%[%]%^%$%%])", "%%%1")
+            local result = text:gsub(escapedPattern, cn, 1)
+            if result ~= text then
+                return result
+            end
+        end
+    end
+    
+    return text
+end
+
+-- 立即翻译单个GUI元素（无延迟）
+local function translateGuiElementImmediately(gui)
+    if TranslatedObjects[gui] then return false end
+    
+    local success, originalText = pcall(function()
+        return gui.Text
+    end)
+    
+    if not success or not originalText or originalText == "" then
+        TranslatedObjects[gui] = true
+        return false
+    end
+    
+    local translationSuccess, translatedText = pcall(function()
+        return translateText(originalText)
+    end)
+    
+    if translationSuccess and translatedText and translatedText ~= originalText then
+        local setSuccess, setError = pcall(function()
+            gui.Text = translatedText
+        end)
+        
+        if setSuccess then
+            TranslatedObjects[gui] = true
+            return true
+        else
+            warn("设置文本失败:", setError)
+        end
+    end
+    
+    TranslatedObjects[gui] = true
+    return false
+end
+
+-- 批量立即翻译容器内的所有GUI元素
+local function batchTranslateContainerImmediately(container)
+    if not container then return 0 end
+    
+    local translatedCount = 0
+    local elementsToTranslate = {}
+    
+    -- 收集所有需要翻译的元素
+    local success, descendants = pcall(function()
+        return container:GetDescendants()
+    end)
+    
+    if not success then return 0 end
+    
+    for _, descendant in ipairs(descendants) do
+        if (descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox")) and not TranslatedObjects[descendant] then
+            table.insert(elementsToTranslate, descendant)
+        end
+    end
+    
+    -- 批量处理，避免卡顿
+    for i = 1, #elementsToTranslate, CONFIG.BATCH_PROCESS_SIZE do
+        local batchEnd = math.min(i + CONFIG.BATCH_PROCESS_SIZE - 1, #elementsToTranslate)
+        
+        for j = i, batchEnd do
+            local element = elementsToTranslate[j]
+            if translateGuiElementImmediately(element) then
+                translatedCount = translatedCount + 1
+            end
+        end
+        
+        -- 小延迟避免阻塞主线程
+        if batchEnd < #elementsToTranslate then
+            RunService.Heartbeat:Wait()
+        end
+    end
+    
+    return translatedCount
+end
+
+-- 设置文本变化监听（立即响应）
+local function setupTextChangeListener(gui)
+    if not gui:IsA("TextLabel") and not gui:IsA("TextButton") and not gui:IsA("TextBox") then
+        return
+    end
+    
+    local connection
+    connection = gui:GetPropertyChangedSignal("Text"):Connect(function()
+        -- 立即响应，无延迟
+        if not gui or not gui.Parent then
+            if connection then
+                connection:Disconnect()
+            end
+            return
+        end
+        
+        local success, result = pcall(function()
+            local currentText = gui.Text
+            if currentText and currentText ~= "" then
+                local translatedText = translateText(currentText)
+                if translatedText ~= currentText then
+                    gui.Text = translatedText
+                end
+            end
+        end)
+        
+        if not success then
+            warn("文本变化监听失败:", result)
+        end
+    end)
+end
+
+-- 设置容器监听器（新元素立即翻译）
+local function setupContainerListener(container)
+    if not container then return end
+    
+    container.DescendantAdded:Connect(function(descendant)
+        -- 立即处理新元素，无延迟
+        if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+            translateGuiElementImmediately(descendant)
+            setupTextChangeListener(descendant)
+        end
+    end)
+end
+
+-- 增强的元表劫持（立即生效）
+local function setupEnhancedMetatableHijack()
+    return pcall(function()
+        local mt = getrawmetatable(game)
+        if not mt then return false end
+        
+        local oldNewIndex = mt.__newindex
+        if not oldNewIndex then return false end
+        
+        setreadonly(mt, false)
+        
+        mt.__newindex = newcclosure(function(t, k, v)
+            if (t:IsA("TextLabel") or t:IsA("TextButton") or t:IsA("TextBox")) and k == "Text" then
+                local original = tostring(v)
+                local translated = translateText(original)
+                if original ~= translated then
+                    v = translated
+                end
+            end
+            return oldNewIndex(t, k, v)
+        end)
+        
+        setreadonly(mt, true)
+        return true
+    end)
+end
+
+-- 主翻译引擎 - 立即更新所有现有文本
+local function setupTranslationEngine()
+    local totalTranslated = 0
+    
+    -- 首先设置元表劫持（如果可用）
+    local metatableSuccess = setupEnhancedMetatableHijack()
+    
+    -- 获取所有需要扫描的容器
+    local containers = {CoreGui}
+    
+    local playerGuiSuccess, playerGui = pcall(function()
+        return LocalPlayer.PlayerGui
+    end)
+    if playerGuiSuccess then
+        table.insert(containers, playerGui)
+    end
+    
+    local starterGuiSuccess = pcall(function()
+        return StarterGui
+    end)
+    if starterGuiSuccess then
+        table.insert(containers, StarterGui)
+    end
+    
+    -- 立即批量翻译所有现有文本
+    for _, container in ipairs(containers) do
+        if container then
+            local count = batchTranslateContainerImmediately(container)
+            totalTranslated = totalTranslated + count
+            print("容器翻译完成:", container.Name, "翻译了", count, "个元素")
+        end
+    end
+    
+    -- 设置新元素监听
+    for _, container in ipairs(containers) do
+        if container then
+            setupContainerListener(container)
+            
+            -- 为新容器中的现有元素也设置监听
+            local success, descendants = pcall(function()
+                return container:GetDescendants()
+            end)
+            if success then
+                for _, descendant in ipairs(descendants) do
+                    if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+                        setupTextChangeListener(descendant)
+                    end
+                end
+            end
+        end
+    end
+    
+    if not metatableSuccess then
+        warn("元表劫持失败，使用GUI扫描方案")
+    end
+    
+    return totalTranslated
+end
+
+-- 主执行流程
+local function main()
+    task.wait(CONFIG.TRANSLATE_DELAY)
+    
+    local startTime = os.clock()
+    local success, result = pcall(function()
+        return setupTranslationEngine()
+    end)
+    
+    local endTime = os.clock()
+    local elapsedTime = endTime - startTime
+    
+    if success then
+        local translatedCount = result or 0
+        local message = string.format("翻译引擎加载完成 \n已立即翻译 %d 个文本元素\n耗时: %.2f 秒", translatedCount, elapsedTime)
+        showNotification(message)
+        print("＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝")
+        print("翻译引擎加载成功 v0.4\n欢迎使用此汉化脚本")
+        print("立即翻译了", translatedCount, "个文本元素")
+        print("耗时:", string.format("%.2f", elapsedTime), "秒")
+        print("＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝")
+    else
+        showNotification("翻译引擎加载失败")
+        warn("翻译引擎加载失败:", result)
+    end
+end
+
+-- 立即启动
+main()
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/mafuasahina/whatever/main/sharkbite2"))()
