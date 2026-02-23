@@ -1,0 +1,549 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+local hitRad = 8
+local soundRad = 10
+local attachRad = 15
+local jRad = 25
+local gRad = 35
+local aimDur = 2
+local qRad = 60
+local fRad = 30
+
+local soundsList = {
+    ["Rocks Dirt Impacts In Ground 26 (SFX)"] = true,
+    ["Rocks Dirt Impacts In Ground 19 (SFX)"] = true,
+    ["Broom Hits 7 (SFX)"] = true,
+    ["Rocks Dirt Impacts In Ground 11 (SFX)"] = true,
+    ["Rock Hit Dirt Impact 16 (SFX)"] = true,
+    ["Broom Hits 5 (SFX)"] = true
+}
+
+local lastTp = 0
+local tpCd = 0.3
+local lastChk = 0
+local chkInt = 0.15
+local aimOn = false
+local aimHook = nil
+local qPressed = false
+local spacePressed = false
+local wPressed = false
+local wStart = 0
+local healMin = 0.5
+local healPart = workspace:WaitForChild("Map"):WaitForChild("Tower"):WaitForChild("Traps"):WaitForChild("Buttons"):WaitForChild("Heal100Brick")
+local healActive = true
+local healing = false
+local scriptOn = true
+
+local function checkRagdoll(char)
+    if not char then return false end
+    
+    local ragFolder = char:FindFirstChild("RagdollConstraints")
+    if ragFolder then
+        for _, cons in ipairs(ragFolder:GetChildren()) do
+            if cons:IsA("BallSocketConstraint") and cons.Enabled then
+                return true
+            end
+        end
+    end
+    
+    local hum = char:FindFirstChild("Humanoid")
+    if hum and hum:GetState() == Enum.HumanoidStateType.Physics then
+        return true
+    end
+    
+    return false
+end
+
+local function getParts()
+    local char = player.Character
+    if not char then return nil, nil, nil end
+    
+    if checkRagdoll(char) then
+        return nil, nil, nil
+    end
+    
+    local hum = char:FindFirstChild("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+    
+    return char, hum, root
+end
+
+local function hasCombat()
+    local char = player.Character
+    if not char then return false end
+    
+    for _, item in ipairs(char:GetChildren()) do
+        if item:IsA("Tool") and item.Name == "Combat" then
+            return true
+        end
+    end
+    
+    return false
+end
+
+local function doTp(cf)
+    if tick() - lastTp < tpCd then return false end
+    
+    local char, hum, root = getParts()
+    if not char or not hum or not root or hum.Health <= 0 then return false end
+    
+    if checkRagdoll(char) then
+        return false
+    end
+    
+    lastTp = tick()
+    
+    local gyro = root:FindFirstChild("BodyGyro")
+    local vel = root:FindFirstChild("BodyVelocity")
+    
+    if gyro then gyro.MaxTorque = Vector3.new(0, 0, 0) end
+    if vel then vel.MaxForce = Vector3.new(0, 0, 0) end
+    
+    root.CFrame = cf
+    
+    task.delay(0.1, function()
+        if gyro and gyro.Parent then
+            gyro.MaxTorque = Vector3.new(40000, 40000, 40000)
+        end
+        if vel and vel.Parent then
+            vel.MaxForce = Vector3.new(40000, 40000, 40000)
+        end
+    end)
+    
+    return true
+end
+
+local function findNear(rad)
+    local _, _, root = getParts()
+    if not root then return nil end
+    
+    local myPos = root.Position
+    local closest = nil
+    local closeDist = rad
+    
+    for _, other in ipairs(Players:GetPlayers()) do
+        if other ~= player then
+            local oChar = other.Character
+            if oChar and not checkRagdoll(oChar) then
+                local oRoot = oChar:FindFirstChild("HumanoidRootPart")
+                if oRoot then
+                    local dist = (myPos - oRoot.Position).Magnitude
+                    if dist < closeDist then
+                        closeDist = dist
+                        closest = other
+                    end
+                end
+            end
+        end
+    end
+    
+    return closest
+end
+
+local function tpBack()
+    local _, _, root = getParts()
+    if not root then return end
+    
+    local near = findNear(hitRad)
+    
+    if near then
+        local oChar = near.Character
+        local oRoot = oChar:FindFirstChild("HumanoidRootPart")
+        if oRoot then
+            local backPos = oRoot.Position - (oRoot.CFrame.LookVector * 7)
+            local newCf = CFrame.new(backPos, oRoot.Position)
+            doTp(newCf)
+            return
+        end
+    end
+    
+    local backPos = root.Position - (root.CFrame.LookVector * 8)
+    local newCf = CFrame.new(backPos, root.Position + root.CFrame.LookVector * 8)
+    doTp(newCf)
+end
+
+local function tpRand()
+    local _, _, root = getParts()
+    if not root then return end
+    
+    local ang = math.random(0, 360)
+    local dist = 6
+    
+    local rad = math.rad(ang)
+    local xOff = math.cos(rad) * dist
+    local zOff = math.sin(rad) * dist
+    
+    local curPos = root.Position
+    local newPos = Vector3.new(
+        curPos.X + xOff,
+        curPos.Y,
+        curPos.Z + zOff
+    )
+    
+    local look = root.CFrame.LookVector
+    local newCf = CFrame.new(newPos, newPos + look)
+    
+    doTp(newCf)
+end
+
+local function tpUp()
+    if not hasCombat() then return end
+    
+    local near = findNear(fRad)
+    
+    if near then
+        local oChar = near.Character
+        if checkRagdoll(oChar) then return end
+        
+        local oRoot = oChar:FindFirstChild("HumanoidRootPart")
+        local head = oChar:FindFirstChild("Head")
+        
+        if oRoot then
+            local height = 6
+            local targetPos
+            
+            if head then
+                targetPos = head.Position + Vector3.new(0, height, 0)
+            else
+                targetPos = oRoot.Position + Vector3.new(0, height + 2, 0)
+            end
+            
+            local newCf = CFrame.new(targetPos, oRoot.Position)
+            
+            if doTp(newCf) then
+                task.delay(0.05, function()
+                    if player.Character then
+                        local hum = player.Character:FindFirstChild("Humanoid")
+                        if hum and hum:GetState() ~= Enum.HumanoidStateType.Freefall then
+                            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                            
+                            local root = player.Character:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                local bv = root:FindFirstChild("BodyVelocity") or Instance.new("BodyVelocity")
+                                bv.Parent = root
+                                bv.MaxForce = Vector3.new(0, 40000, 0)
+                                bv.Velocity = Vector3.new(0, 50, 0)
+                                
+                                task.delay(0.3, function()
+                                    if bv and bv.Parent then
+                                        bv:Destroy()
+                                    end
+                                end)
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end
+end
+
+local function tpAim()
+    if not hasCombat() then return end
+    
+    local near = findNear(gRad)
+    
+    if near then
+        local oChar = near.Character
+        local oRoot = oChar:FindFirstChild("HumanoidRootPart")
+        
+        if oRoot then
+            local tpPos = oRoot.Position + oRoot.CFrame.LookVector * 3
+            local newCf = CFrame.new(tpPos, oRoot.Position)
+            
+            if doTp(newCf) then
+                if aimOn then return end
+                
+                aimOn = true
+                local start = tick()
+                
+                if aimHook then
+                    aimHook:Disconnect()
+                end
+                
+                aimHook = RunService.Heartbeat:Connect(function()
+                    if not aimOn or tick() - start > aimDur then
+                        aimOn = false
+                        if aimHook then
+                            aimHook:Disconnect()
+                            aimHook = nil
+                        end
+                        return
+                    end
+                    
+                    local oChar = near.Character
+                    local _, _, myRoot = getParts()
+                    
+                    if not oChar or not myRoot or checkRagdoll(oChar) then
+                        aimOn = false
+                        return
+                    end
+                    
+                    local oRoot = oChar:FindFirstChild("HumanoidRootPart")
+                    if not oRoot then
+                        aimOn = false
+                        return
+                    end
+                    
+                    local targetPos = oRoot.Position
+                    local curPos = myRoot.Position
+                    
+                    local newCf = CFrame.new(curPos, Vector3.new(targetPos.X, curPos.Y, targetPos.Z))
+                    myRoot.CFrame = newCf
+                end)
+            end
+        end
+    end
+end
+
+local function tpToBody()
+    if not hasCombat() then return end
+    
+    local near = findNear(jRad)
+    
+    if near then
+        local oChar = near.Character
+        if checkRagdoll(oChar) then return end
+        
+        local oRoot = oChar:FindFirstChild("HumanoidRootPart")
+        local torso = oChar:FindFirstChild("Torso") or oChar:FindFirstChild("UpperTorso")
+        
+        if oRoot then
+            local targetPos
+            if torso then
+                targetPos = torso.Position
+            else
+                targetPos = oRoot.Position
+            end
+            
+            local tpPos = targetPos + Vector3.new(0, 0, 0)
+            local newCf = CFrame.new(tpPos, oRoot.Position)
+            
+            doTp(newCf)
+        end
+    end
+end
+
+local function tpIn()
+    if not hasCombat() then return end
+    
+    local near = findNear(qRad)
+    
+    if near then
+        local oChar = near.Character
+        if checkRagdoll(oChar) then return end
+        
+        local oRoot = oChar:FindFirstChild("HumanoidRootPart")
+        
+        if oRoot then
+            local newCf = CFrame.new(oRoot.Position, oRoot.Position + oRoot.CFrame.LookVector)
+            doTp(newCf)
+        end
+    end
+end
+
+local function checkKeys()
+    if qPressed and spacePressed and wPressed then
+        local cur = tick()
+        if cur - wStart >= 1 then
+            tpIn()
+            qPressed = false
+            spacePressed = false
+            wPressed = false
+            return true
+        end
+    end
+    return false
+end
+
+UserInputService.InputBegan:Connect(function(input, proc)
+    if proc then return end
+    
+    if input.KeyCode == Enum.KeyCode.Q then
+        qPressed = true
+        checkKeys()
+    
+    elseif input.KeyCode == Enum.KeyCode.Space then
+        spacePressed = true
+        checkKeys()
+    
+    elseif input.KeyCode == Enum.KeyCode.W then
+        wPressed = true
+        wStart = tick()
+        checkKeys()
+    
+    elseif input.KeyCode == Enum.KeyCode.J then
+        tpToBody()
+    
+    elseif input.KeyCode == Enum.KeyCode.G then
+        tpAim()
+        
+    elseif input.KeyCode == Enum.KeyCode.F then
+        tpUp()
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input, proc)
+    if input.KeyCode == Enum.KeyCode.Q then
+        qPressed = false
+    elseif input.KeyCode == Enum.KeyCode.Space then
+        spacePressed = false
+    elseif input.KeyCode == Enum.KeyCode.W then
+        wPressed = false
+    end
+end)
+
+local function checkSounds()
+    if tick() - lastChk < chkInt then return false end
+    
+    local _, _, root = getParts()
+    if not root then return false end
+    
+    lastChk = tick()
+    local myPos = root.Position
+    
+    local terrain = Workspace:FindFirstChild("Terrain")
+    if not terrain then return false end
+    
+    for _, attach in ipairs(terrain:GetDescendants()) do
+        if attach:IsA("Attachment") then
+            local dist = (myPos - attach.WorldPosition).Magnitude
+            if dist <= attachRad then
+                for _, child in ipairs(attach:GetChildren()) do
+                    if child:IsA("Sound") and soundsList[child.Name] then
+                        if child.IsPlaying or child.TimeLength > 0 then
+                            if dist <= soundRad then
+                                return true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    return false
+end
+
+local lastHealth = 100
+player.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    lastHealth = hum.Health
+    
+    hum.HealthChanged:Connect(function()
+        local cur = hum.Health
+        if cur < lastHealth and not checkRagdoll(char) then
+            tpBack()
+        end
+        lastHealth = cur
+    end)
+end)
+
+if player.Character then
+    local hum = player.Character:WaitForChild("Humanoid")
+    lastHealth = hum.Health
+    hum.HealthChanged:Connect(function()
+        local cur = hum.Health
+        if cur < lastHealth and not checkRagdoll(player.Character) then
+            tpBack()
+        end
+        lastHealth = cur
+    end)
+end
+
+local function doHeal()
+    if healing then return end
+    if checkRagdoll(player.Character) then return end
+    
+    healing = true
+    
+    local char = player.Character
+    if not char then 
+        healing = false
+        return 
+    end
+    
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChild("Humanoid")
+    
+    if hrp and hum then
+        local save = hrp.CFrame
+        
+        hrp.CFrame = healPart.CFrame
+        
+        task.wait(2)
+        
+        hrp.CFrame = save
+        
+        hum.Health = hum.MaxHealth
+    end
+    
+    healing = false
+end
+
+RunService.Heartbeat:Connect(function()
+    if not healActive then return end
+    if healing then return end
+    
+    local char = player.Character
+    if not char then return end
+    
+    if checkRagdoll(char) then return end
+    
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return end
+    
+    if hum.Health / hum.MaxHealth <= healMin then
+        doHeal()
+    end
+end)
+
+_G.toggleHeal = function()
+    healActive = not healActive
+end
+
+_G.setHealMin = function(percent)
+    healMin = percent / 100
+end
+
+_G.forceHeal = function()
+    if not healing and not checkRagdoll(player.Character) then
+        doHeal()
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    if not scriptOn then return end
+    if checkRagdoll(player.Character) then return end
+    
+    if checkSounds() then
+        tpRand()
+    end
+end)
+
+_G.toggleScript = function()
+    scriptOn = not scriptOn
+end
+
+_G.testHeal = function()
+    if not healing and not checkRagdoll(player.Character) then
+        doHeal()
+    end
+end
+
+_G.testUp = function()
+    tpUp()
+end
+
+_G.checkRag = function()
+    local char = player.Character
+    if char then
+        return checkRagdoll(char)
+    end
+    return false
+end
